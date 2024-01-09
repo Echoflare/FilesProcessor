@@ -22,7 +22,7 @@ def rename_files(directory):
         
         while os.path.exists(os.path.join(directory, new_name)):
             index += 1
-            new_name = f'{name_start}_{index}.{file_name.split(".")[-1]}'
+            new_name = f'{name_startswith}_{index}.{file_name.split(".")[-1]}'
         
         old_path = os.path.join(directory, file_name)
         new_path = os.path.join(directory, new_name)
