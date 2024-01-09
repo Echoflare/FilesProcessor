@@ -66,12 +66,12 @@ def encrypt_image_v2(image:Image.Image, psw):
     image.paste(Image.fromarray(pixel_array))
     return image
 
-def process_image(filename, output_filename, password):
+def process_image(filename, output_filename, password, source_dir):
     global encrypt_count
     encrypt_count += 1
     print(f'{encrypt_count}/{file_count}')
     try:
-        image = Image.open(filename)
+        image = Image.open(os.path.join(source_dir,filename))
         format = PngImagePlugin.PngImageFile.format
         pnginfo = PngImagePlugin.PngInfo()
         if v2:
@@ -82,7 +82,7 @@ def process_image(filename, output_filename, password):
             pnginfo.add_text('Encrypt', 'pixel_shuffle')
         image.save(output_filename,pnginfo=pnginfo,format=format)
         image.close()
-        os.rename(filename, f'{processed_dir}/{filename}')
+        os.rename(os.path.join(source_dir,filename), f'{processed_dir}/{filename}')
     except Exception as e:
         print(str(e))
         print(f"加密 {filename} 文件时出错")
@@ -142,7 +142,7 @@ def main():
                 encrypt_count += 1
                 print(f'{encrypt_count}/{file_count}')
                 continue
-            futures.append(executor.submit(process_image, filename, output_filename, password))
+            futures.append(executor.submit(process_image, filename, output_filename, password, encrypt_dir))
     concurrent.futures.wait(futures)
                     
     if skipped_files:

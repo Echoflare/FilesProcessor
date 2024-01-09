@@ -7,9 +7,9 @@ import concurrent.futures
 
 import argparse
 
-def process_image_below(filename, output_filename, scale, resample_method, threshold):
+def process_image_below(filename, output_filename, scale, resample_method, threshold, source_dir):
     try:
-        image = Image.open(filename)
+        image = Image.open(os.path.join(source_dir,filename))
         if image.width <= threshold or image.height <= threshold:
             print(f"缩放 {filename} 文件 (达到阈值: {threshold})")
             w = int(image.width * scale)  
@@ -18,16 +18,16 @@ def process_image_below(filename, output_filename, scale, resample_method, thres
             resized_image.save(output_filename)
             image.close()
             resized_image.close()
-            os.rename(filename, f'{processed_dir}/{filename}')
+            os.rename(os.path.join(source_dir,filename), f'{processed_dir}/{filename}')
         else:
             image.close()
     except Exception as e:
         print(str(e))
         print(f"缩放 {filename} 文件时出错")
 
-def process_image_above(filename, output_filename, scale, resample_method, threshold):
+def process_image_above(filename, output_filename, scale, resample_method, threshold, source_dir):
     try:
-        image = Image.open(filename)
+        image = Image.open(os.path.join(source_dir,filename))
         if image.width >= threshold or image.height >= threshold:
             print(f"缩放 {filename} 文件 (达到阈值: {threshold})")
             w = int(image.width * scale)  
@@ -36,7 +36,7 @@ def process_image_above(filename, output_filename, scale, resample_method, thres
             resized_image.save(output_filename)
             image.close()
             resized_image.close()
-            os.rename(filename, f'{processed_dir}/{filename}')
+            os.rename(os.path.join(source_dir,filename), f'{processed_dir}/{filename}')
         else:
             image.close()
     except Exception as e:
@@ -95,9 +95,9 @@ def main():
                 print(f"已跳过 {filename} 文件")
                 continue
             if scale < 1:
-                futures.append(executor.submit(process_image_above, filename, output_filename, scale, resample_method, threshold))
+                futures.append(executor.submit(process_image_above, filename, output_filename, scale, resample_method, threshold, source_dir))
             elif scale > 1:
-                futures.append(executor.submit(process_image_below, filename, output_filename, scale, resample_method, threshold))
+                futures.append(executor.submit(process_image_below, filename, output_filename, scale, resample_method, threshold, source_dir))
     concurrent.futures.wait(futures)
                     
     if skipped_files:

@@ -7,19 +7,19 @@ import concurrent.futures
 
 import argparse
 
-def process_image(filename, output_filename, scale, resample_method):
+def process_image(filename, output_filename, scale, resample_method, source_dir):
     global processed_count
     processed_count += 1
     print(f'{processed_count}/{file_count}')
     try:
-        image = Image.open(filename)
+        image = Image.open(os.path.join(source_dir,filename))
         w = int(image.width * scale)  
         h = int(image.height * scale)
         resized_image = image.resize((w, h), resample=resample_method)
         resized_image.save(output_filename) 
         image.close()
         resized_image.close()
-        os.rename(filename, f'{processed_dir}/{filename}')
+        os.rename(os.path.join(source_dir,filename), f'{processed_dir}/{filename}')
     except Exception as e:
         print(str(e))
         print(f"缩放 {filename} 文件时出错")
@@ -78,7 +78,7 @@ def main():
                 processed_count += 1
                 print(f'{processed_count}/{file_count}')
                 continue
-            futures.append(executor.submit(process_image, filename, output_filename, scale, resample_method))
+            futures.append(executor.submit(process_image, filename, output_filename, scale, resample_method, source_dir))
     concurrent.futures.wait(futures)
                     
     if skipped_files:

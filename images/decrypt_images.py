@@ -64,12 +64,12 @@ def decrypt_image_v2(image:Image.Image, psw):
     image.paste(Image.fromarray(pixel_array))
     return image
     
-def process_image(filename, output_filename, password):
+def process_image(filename, output_filename, password, source_dir):
     global decrypt_count
     decrypt_count += 1
     print(f'{decrypt_count}/{file_count}')
     try:
-        image = Image.open(filename,formats=['PNG'])
+        image = Image.open(os.path.join(source_dir,filename),formats=['PNG'])
         pnginfo = image.info or {}
         if 'Encrypt' in pnginfo and pnginfo["Encrypt"] == 'pixel_shuffle':
             decrypt_image(image, password)
@@ -88,7 +88,7 @@ def process_image(filename, output_filename, password):
                     info.add_text(key,pnginfo[key])
             image.save(output_filename,pnginfo=info)
         image.close()
-        os.rename(filename, f'{processed_dir}/{filename}')
+        os.rename(os.path.join(source_dir,filename), f'{processed_dir}/{filename}')
     except Exception as e:
         print(str(e))
         print(f"解密 {filename} 文件时出错")
@@ -144,7 +144,7 @@ def main():
                 decrypt_count += 1
                 print(f'{decrypt_count}/{file_count}')
                 continue
-            futures.append(executor.submit(process_image, filename, output_filename, password))
+            futures.append(executor.submit(process_image, filename, output_filename, password, decrypt_dir))
     concurrent.futures.wait(futures)
                     
     if skipped_files:
