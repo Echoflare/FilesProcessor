@@ -13,10 +13,11 @@ def process_image(filename, output_filename, scale, resample_method, source_dir)
     print(f'{processed_count}/{file_count}')
     try:
         image = Image.open(os.path.join(source_dir,filename))
+        format = PngImagePlugin.PngImageFile.format
         w = int(image.width * scale)  
         h = int(image.height * scale)
         resized_image = image.resize((w, h), resample=resample_method)
-        resized_image.save(output_filename) 
+        resized_image.save(output_filename,format=format) 
         image.close()
         resized_image.close()
         os.rename(os.path.join(source_dir,filename), f'{processed_dir}/{filename}')

@@ -10,6 +10,7 @@ import argparse
 def process_image_below(filename, output_filename, precision, resample_method, threshold, source_dir):
     try:
         image = Image.open(os.path.join(source_dir,filename))
+        format = PngImagePlugin.PngImageFile.format
         if image.width <= threshold or image.height <= threshold:
             if image.width < image.height:
                 scale = round(threshold / image.width, precision)
@@ -19,7 +20,7 @@ def process_image_below(filename, output_filename, precision, resample_method, t
             w = int(image.width * scale)  
             h = int(image.height * scale)
             resized_image = image.resize((w, h), resample=resample_method)
-            resized_image.save(output_filename)
+            resized_image.save(output_filename,format=format)
             image.close()
             resized_image.close()
             os.rename(os.path.join(source_dir,filename), f'{processed_dir}/{filename}')
@@ -32,6 +33,7 @@ def process_image_below(filename, output_filename, precision, resample_method, t
 def process_image_above(filename, output_filename, precision, resample_method, threshold, source_dir):
     try:
         image = Image.open(os.path.join(source_dir,filename))
+        format = PngImagePlugin.PngImageFile.format
         if image.width >= threshold or image.height >= threshold:
             if image.width > image.height:
                 scale = round(threshold / image.width, precision)
@@ -41,7 +43,7 @@ def process_image_above(filename, output_filename, precision, resample_method, t
             w = int(image.width * scale)  
             h = int(image.height * scale)
             resized_image = image.resize((w, h), resample=resample_method)
-            resized_image.save(output_filename)
+            resized_image.save(output_filename,format=format)
             image.close()
             resized_image.close()
             os.rename(os.path.join(source_dir,filename), f'{processed_dir}/{filename}')

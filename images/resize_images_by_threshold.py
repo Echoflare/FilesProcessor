@@ -10,12 +10,13 @@ import argparse
 def process_image_below(filename, output_filename, scale, resample_method, threshold, source_dir):
     try:
         image = Image.open(os.path.join(source_dir,filename))
+        format = PngImagePlugin.PngImageFile.format
         if image.width <= threshold or image.height <= threshold:
             print(f"缩放 {filename} 文件 (达到阈值: {threshold})")
             w = int(image.width * scale)  
             h = int(image.height * scale)
             resized_image = image.resize((w, h), resample=resample_method)
-            resized_image.save(output_filename)
+            resized_image.save(output_filename,format=format)
             image.close()
             resized_image.close()
             os.rename(os.path.join(source_dir,filename), f'{processed_dir}/{filename}')
@@ -28,12 +29,13 @@ def process_image_below(filename, output_filename, scale, resample_method, thres
 def process_image_above(filename, output_filename, scale, resample_method, threshold, source_dir):
     try:
         image = Image.open(os.path.join(source_dir,filename))
+        format = PngImagePlugin.PngImageFile.format
         if image.width >= threshold or image.height >= threshold:
             print(f"缩放 {filename} 文件 (达到阈值: {threshold})")
             w = int(image.width * scale)  
             h = int(image.height * scale)
             resized_image = image.resize((w, h), resample=resample_method)
-            resized_image.save(output_filename)
+            resized_image.save(output_filename,format=format)
             image.close()
             resized_image.close()
             os.rename(os.path.join(source_dir,filename), f'{processed_dir}/{filename}')

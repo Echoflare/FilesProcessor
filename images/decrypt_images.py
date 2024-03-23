@@ -70,6 +70,7 @@ def process_image(filename, output_filename, password, source_dir):
     print(f'{decrypt_count}/{file_count}')
     try:
         image = Image.open(os.path.join(source_dir,filename),formats=['PNG'])
+        format = PngImagePlugin.PngImageFile.format
         pnginfo = image.info or {}
         if 'Encrypt' in pnginfo and pnginfo["Encrypt"] == 'pixel_shuffle':
             decrypt_image(image, password)
@@ -86,7 +87,7 @@ def process_image(filename, output_filename, password, source_dir):
             for key in pnginfo.keys():
                 if pnginfo[key]:
                     info.add_text(key,pnginfo[key])
-            image.save(output_filename,pnginfo=info)
+            image.save(output_filename,pnginfo=info,format=format)
         image.close()
         os.rename(os.path.join(source_dir,filename), f'{processed_dir}/{filename}')
     except Exception as e:
