@@ -8,9 +8,8 @@ import concurrent.futures
 import argparse
 
 def get_range(input:str,offset:int,range_len=4):
-    input = input+input
     offset = offset % len(input)
-    return input[offset:offset+range_len]
+    return (input*2)[offset:offset+range_len]
 
 def get_sha256(input:str):
     hash_object = hashlib.sha256()
@@ -19,12 +18,20 @@ def get_sha256(input:str):
 
 def shuffle_arr(arr,key):
     sha_key = get_sha256(key)
-    key_offset = 0
-    for i in range(len(arr)):
-        to_index = int(get_range(sha_key,key_offset,range_len=8),16) % (len(arr) -i)
-        key_offset += 1
-        if key_offset >= len(sha_key): key_offset = 0
+    arr_len = len(arr)
+    for i in range(arr_len):
+        to_index = int(get_range(sha_key,i,range_len=8),16) % (arr_len -i)
         arr[i],arr[to_index] = arr[to_index],arr[i]
+    return arr
+
+def shuffle_arr_v2(arr,key):
+    sha_key = get_sha256(key)
+    arr_len = len(arr)
+    s_idx = arr_len
+    for i in range(arr_len):
+        s_idx = arr_len - i - 1
+        to_index = int(get_range(sha_key,i,range_len=8),16) % (arr_len -i)
+        arr[s_idx],arr[to_index] = arr[to_index],arr[s_idx]
     return arr
 
 def encrypt_image(image:Image.Image, psw):
@@ -66,20 +73,40 @@ def encrypt_image_v2(image:Image.Image, psw):
     image.paste(Image.fromarray(pixel_array))
     return image
 
+def encrypt_image_v3(image:Image.Image, psw):
+    '''
+    return: pixel_array
+    '''
+    width = image.width
+    height = image.height
+    x_arr = np.arange(width)
+    shuffle_arr_v2(x_arr,psw) 
+    y_arr = np.arange(height)
+    shuffle_arr_v2(y_arr,get_sha256(psw))
+    pixel_array = np.array(image)
+    
+    _pixel_array = pixel_array.copy()
+    for x in range(height): 
+        pixel_array[x] = _pixel_array[y_arr[x]]
+    pixel_array = np.transpose(pixel_array, axes=(1, 0, 2))
+    
+    _pixel_array = pixel_array.copy()
+    for x in range(width): 
+        pixel_array[x] = _pixel_array[x_arr[x]]
+    pixel_array = np.transpose(pixel_array, axes=(1, 0, 2))
+
+    return pixel_array
+
 def process_image(filename, output_filename, password, source_dir):
     global encrypt_count
     encrypt_count += 1
     print(f'{encrypt_count}/{file_count}')
     try:
         image = Image.open(os.path.join(source_dir,filename))
+        image.paste(Image.fromarray(encrypt_image_v3(image, password)))
         format = PngImagePlugin.PngImageFile.format
         pnginfo = PngImagePlugin.PngInfo()
-        if v2:
-            encrypt_image_v2(image, password)
-            pnginfo.add_text('Encrypt', 'pixel_shuffle_2')
-        else:
-            encrypt_image(image, password)
-            pnginfo.add_text('Encrypt', 'pixel_shuffle')
+        pnginfo.add_text('Encrypt', 'pixel_shuffle_3')
         image.save(output_filename,pnginfo=pnginfo,format=format)
         image.close()
         os.rename(os.path.join(source_dir,filename), f'{processed_dir}/{filename}')
@@ -94,7 +121,6 @@ def main():
     parser.add_argument('-d', '--encrypt-dir', default='.', help='加密的目标文件夹路径')
     parser.add_argument('-p', '--password', help='加密所需密码')
     parser.add_argument('-y', '--yes', action='store_true', help='自动同意加密全部文件')
-    parser.add_argument('-v1', '--use-v1', action='store_true', help='使用加密算法v1 (默认v2)')
 
     args = parser.parse_args()
 
@@ -115,9 +141,6 @@ def main():
                 break
             elif choice.lower() == 'n':
                 return
-    
-    global v2
-    v2 = not args.use_v1
     
     global output_dir, processed_dir
     
